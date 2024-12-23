@@ -153,3 +153,41 @@ class Encoder:
         """
         
         return self.fileContent
+    
+    def get_proof_path(self, node: Node, target_word: str, path=None):
+        """
+        Generate a proof path for a specific word in the Merkle tree.
+        """
+        if path is None:
+            path = []
+
+        # Base case: Leaf node with the target word
+        if not node.leftChild and not node.rightChild and node.word == target_word:
+            return path
+
+        # Traverse left child
+        if node.leftChild:
+            left_path = self.get_proof_path(node.leftChild, target_word, path + [("L", node.leftChild.hashValue)])
+            if left_path:
+                return left_path
+
+        # Traverse right child
+        if node.rightChild:
+            right_path = self.get_proof_path(node.rightChild, target_word, path + [("R", node.rightChild.hashValue)])
+            if right_path:
+                return right_path
+
+        return None
+
+    def verify_chunk_with_path(self, data_chunk: str, proof_path, root_hash):
+        """
+        Verify a data chunk using its proof path and the root hash.
+        """
+        current_hash = self.hash(data_chunk)
+        for direction, sibling_hash in proof_path:
+            if direction == "L":
+                current_hash = self.hash(sibling_hash + current_hash)
+            elif direction == "R":
+                current_hash = self.hash(current_hash + sibling_hash)
+
+        return current_hash == root_hash
