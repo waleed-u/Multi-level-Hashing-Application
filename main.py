@@ -29,6 +29,14 @@ class MerkleSignatureApp(tk.Frame):
         self.verify_signature_btn = tk.Button(self, text="Verify Digital Signature", command=self.verify_signature, state="disabled")
         self.verify_signature_btn.grid(row=3, column=1, pady=10)
 
+        # Add Export Signature Button
+        self.export_signature_btn = tk.Button(self, text="Export Signature", command=self.export_signature, state="disabled")
+        self.export_signature_btn.grid(row=5, column=3, padx=5)
+
+        # Add Import Signature Button after Export Signature Button
+        self.import_signature_btn = tk.Button(self, text="Import Signature", command=self.import_signature)
+        self.import_signature_btn.grid(row=5, column=4, padx=5)
+
         # Editable Merkle Tree Root Hash Section
         tk.Label(self, text="Merkle Tree Root Hash:").grid(row=4, column=0, sticky="w")
         self.root_hash_entry = tk.Entry(self, width=60)
@@ -87,6 +95,7 @@ class MerkleSignatureApp(tk.Frame):
             self.digital_signature = generate_signature(self.root_hash)
             self.signature_label.config(text=self.digital_signature)
             self.verify_signature_btn.config(state="normal")
+            self.export_signature_btn.config(state="normal")  # Enable export button
             messagebox.showinfo("Success", "Digital signature generated successfully!")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate digital signature: {e}")
@@ -103,6 +112,53 @@ class MerkleSignatureApp(tk.Frame):
                 messagebox.showerror("Error", "Digital signature is invalid!")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to verify digital signature: {e}")
+
+    def export_signature(self):
+        """
+        Export the digital signature to a text file.
+        """
+        if not self.digital_signature:
+            messagebox.showerror("Error", "No signature to export!")
+            return
+            
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")],
+            title="Export Digital Signature"
+        )
+        
+        if file_path:
+            try:
+                # Convert bytes to string using hex encoding
+                signature_str = self.digital_signature.hex()
+                with open(file_path, "w", encoding="utf-8") as file:
+                    file.write(signature_str)
+                messagebox.showinfo("Success", "Signature exported successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to export signature: {e}")
+
+    def import_signature(self):
+        """
+        Import a digital signature from a text file and convert it from hex format.
+        """
+        file_path = filedialog.askopenfilename(
+            filetypes=[("Text Files", "*.txt")],
+            title="Import Digital Signature"
+        )
+        
+        if file_path:
+            try:
+                with open(file_path, "r", encoding="utf-8") as file:
+                    hex_signature = file.read().strip()
+                    # Convert hex string back to bytes
+                    self.digital_signature = bytes.fromhex(hex_signature)
+                    self.signature_label.config(text=hex_signature)
+                    self.verify_signature_btn.config(state="normal")
+                    messagebox.showinfo("Success", "Signature imported successfully!")
+            except ValueError as e:
+                messagebox.showerror("Error", "Invalid signature format. Please ensure the file contains a valid hex signature.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to import signature: {e}")
 
 
 def main():
