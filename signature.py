@@ -1,17 +1,43 @@
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import utils
+import os
 
 class DigitalSignature:
     def __init__(self):
         """
-        Initialize the DigitalSignature object and generate the key pair.
+        Initialize the DigitalSignature object and load the key pair from files.
         """
-        self.private_key = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=2048
-        )
-        self.public_key = self.private_key.public_key()
+        self.private_key = None
+        self.public_key = None
+        self.load_keys()
+
+    def load_keys(self):
+        """
+        Load keys from files. If files don't exist, generate new keys.
+        """
+        try:
+            # Load private key
+            with open('private_key.pem', 'rb') as f:
+                private_pem = f.read()
+                self.private_key = serialization.load_pem_private_key(
+                    private_pem,
+                    password=None
+                )
+
+            # Load public key
+            with open('public_key.pem', 'rb') as f:
+                public_pem = f.read()
+                self.public_key = serialization.load_pem_public_key(
+                    public_pem
+                )
+        except FileNotFoundError:
+            # If keys don't exist, generate new ones
+            self.private_key = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=2048
+            )
+            self.public_key = self.private_key.public_key()
 
     def generate_signature(self, data: str) -> bytes:
         """
