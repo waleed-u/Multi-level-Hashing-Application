@@ -1,61 +1,82 @@
 import string
 import random
-import argparse
 from Tree.Models.Encoder import Encoder
-
 
 def generate_random_string(length):
     """Generate a random string of given length."""
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-def find_second_preimage(hash_function, original_data, hash_value):
-    """Find a second pre-image for a given hash value."""
-    max_attempts = 10000  
-    original_hash = hash_function(original_data)
-
-    file_names = ["Attack Files/file1.txt",'Attack Files/file2.txt','Attack Files/file3.txt','Attack Files/file4.txt','Attack Files/file5.txt']
+def check_file_collisions():
+    """Check for collisions between the files"""
+    file_names = ["Attack Files/file1.txt", 'Attack Files/file2.txt', 'Attack Files/file3.txt', 
+                  'Attack Files/file4.txt', 'Attack Files/file5.txt']
     
+    # Store hashes for each file
+    file_hashes = {}
+    
+    print("\n=== Checking for collisions between files ===")
     for file_name in file_names:
         encoder = Encoder(file_name, isFile=True)
-        candidate_hash = encoder.getFinalHash()
-        print(candidate_hash)
-        if (candidate_hash == hash_value):
-            return f"\n{file_name} matched!"
-        print(f"Not matched with {file_name}")
+        current_hash = encoder.getFinalHash()
+        
+        # Check if this hash already exists
+        if current_hash in file_hashes:
+            print(f"\nCOLLISION FOUND!")
+            print(f"File 1: {file_hashes[current_hash]}")
+            print(f"File 2: {file_name}")
+            print(f"Hash: {current_hash}")
+            return True
+        
+        file_hashes[current_hash] = file_name
+        print(f"Hash for {file_name}: {current_hash}")
+    
+    print("\nNo collisions found between files.")
+    return False
 
-    for _ in range(max_attempts):
+def check_random_string_collisions():
+    """Check for collisions using random strings"""
+    max_attempts = 10000
+    test_file = "Attack Files/file1.txt"  # Using first file as reference
+    
+    print("\n=== Checking for collisions with random strings ===")
+    print(f"Will try {max_attempts} random strings...")
+    
+    # Get original hash
+    encoder = Encoder(test_file, isFile=True)
+    original_hash = encoder.getFinalHash()
+    original_data = encoder.getOriginalData()
+    
+    # Try random strings
+    for i in range(max_attempts):
         candidate_data = generate_random_string(len(original_data))
-
         encoder = Encoder(candidate_data, isFile=False)
         candidate_hash = encoder.getFinalHash()
         
-        if candidate_hash == hash_value and candidate_data != original_data:
-            return candidate_data
+        if candidate_hash == original_hash and candidate_data != original_data:
+            print(f"\nCOLLISION FOUND after {i+1} attempts!")
+            print(f"Original data hash: {original_hash}")
+            print(f"Colliding string: {candidate_data}")
+            return True
+        
+        if (i + 1) % 1000 == 0:
+            print(f"Tried {i + 1} strings...")
     
-    return "Not matched within 10,000 iterations." 
+    print("\nNo collisions found with random strings.")
+    return False
 
+def main():
+    print("Starting collision detection...")
+    
+    # First check file collisions
+    file_collision = check_file_collisions()
+    
+    # Then check random string collisions
+    random_collision = check_random_string_collisions()
+    
+    # Summary
+    print("\n=== SUMMARY ===")
+    print(f"File Collisions Found: {'Yes' if file_collision else 'No'}")
+    print(f"Random String Collisions Found: {'Yes' if random_collision else 'No'}")
 
-def attack()->None:
-    parser = argparse.ArgumentParser(
-        prog="Multi Level Encoder for Hashing",
-        description="This program read a file and creates a Merkle Tree ready for Multi-Level Hashing",
-        epilog="Created by \033[1mUmar Tariq :)\033[0m"
-    )
-    parser.add_argument("-f","--file",action='store',help="stores path of the file you want to hash", type=str)
-    parser.add_argument("-s","--string",action='store',help="sstring you want to hash", type=str)
-    args = parser.parse_args()
-    
-    if args.file == None and args.string == None:
-        print("Usage: -f, --file\tadd path of file to be hashed")
-        print("Usage: -s, --string\tstring to be hashed")
-        return
-    
-    if args.file != None:
-        encoder = Encoder(args.file, isFile=True)
-        print(find_second_preimage(encoder.getHashFunction(),encoder.getOriginalData(),encoder.getFinalHash()))
-    else:
-        encoder = Encoder(args.string, isFile=False)
-        print(find_second_preimage(encoder.getHashFunction(),encoder.getOriginalData(),encoder.getFinalHash()))
-    
-    
-attack()
+if __name__ == "__main__":
+    main()
