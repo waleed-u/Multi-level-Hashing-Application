@@ -2,6 +2,49 @@ import tkinter as tk
 from tkinter import filedialog, scrolledtext, messagebox
 from Tree.Models.Encoder import Encoder  # Importing Encoder for Merkle Tree functionality
 from signature import generate_signature, verify_signature  # Importing Digital Signature Module
+from login import LoginWindow
+from signup import SignupWindow
+
+
+class Application(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Authentication")
+        self.geometry("300x200")
+        self.current_user = None
+        self.create_auth_widgets()
+        self.center_window()
+        
+    def center_window(self):
+        self.update_idletasks()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f'{width}x{height}+{x}+{y}')
+
+    def create_auth_widgets(self):
+        login_btn = tk.Button(self, text="Login", command=self.show_login)
+        login_btn.pack(pady=20)
+        
+        signup_btn = tk.Button(self, text="Sign Up", command=self.show_signup)
+        signup_btn.pack(pady=20)
+
+    def show_login(self):
+        LoginWindow(self)
+
+    def show_signup(self):
+        SignupWindow(self)
+
+    def show_main_application(self):
+        self.withdraw()  # Hide the auth window
+        main_window = tk.Toplevel(self)
+        app = MerkleSignatureApp(main_window)
+        
+        def on_closing():
+            self.destroy()  # Close the entire application
+            
+        main_window.protocol("WM_DELETE_WINDOW", on_closing)
 
 
 class MerkleSignatureApp(tk.Frame):
@@ -162,8 +205,7 @@ class MerkleSignatureApp(tk.Frame):
 
 
 def main():
-    root = tk.Tk()
-    app = MerkleSignatureApp(root)
+    app = Application()
     app.mainloop()
 
 
