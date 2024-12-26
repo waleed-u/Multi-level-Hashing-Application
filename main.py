@@ -82,8 +82,8 @@ class MerkleSignatureApp(tk.Frame):
 
         # Editable Merkle Tree Root Hash Section
         tk.Label(self, text="Merkle Tree Root Hash:").grid(row=4, column=0, sticky="w")
-        self.root_hash_entry = tk.Entry(self, width=60)
-        self.root_hash_entry.grid(row=4, column=1, columnspan=2, sticky="w")
+        self.root_hash_label = tk.Label(self, text="", width=40, anchor="w")
+        self.root_hash_label.grid(row=4, column=1, columnspan=2, sticky="w")
 
         tk.Label(self, text="Digital Signature:").grid(row=5, column=0, sticky="w")
         self.signature_label = tk.Label(self, text="", wraplength=500, anchor="w", justify="left")
@@ -120,8 +120,8 @@ class MerkleSignatureApp(tk.Frame):
 
         self.encoder = Encoder(input_data, isFile=False)
         self.root_hash = self.encoder.getFinalHash()
-        self.root_hash_entry.delete(0, tk.END)
-        self.root_hash_entry.insert(0, self.root_hash)
+        display_hash = self.root_hash[:60] if len(self.root_hash) > 60 else self.root_hash
+        self.root_hash_label.config(text=display_hash)
         self.sign_data_btn.config(state="normal")
         messagebox.showinfo("Success", "Merkle Tree created successfully!")
 
@@ -130,13 +130,12 @@ class MerkleSignatureApp(tk.Frame):
         Generate a digital signature for the Merkle Tree's root hash.
         """
         try:
-            self.root_hash = self.root_hash_entry.get().strip()
             if not self.root_hash:
                 messagebox.showerror("Error", "Root hash cannot be empty!")
                 return
 
             self.digital_signature = generate_signature(self.root_hash)
-            self.signature_label.config(text=self.digital_signature)
+            self.signature_label.config(text=self.digital_signature.hex())
             self.verify_signature_btn.config(state="normal")
             self.export_signature_btn.config(state="normal")  # Enable export button
             messagebox.showinfo("Success", "Digital signature generated successfully!")
@@ -148,7 +147,11 @@ class MerkleSignatureApp(tk.Frame):
         Verify the digital signature for the Merkle Tree's root hash.
         """
         try:
-            is_valid = verify_signature(self.root_hash_entry.get().strip(), self.digital_signature)
+            if not self.root_hash or not self.digital_signature:
+                messagebox.showerror("Error", "Root hash or signature is missing!")
+                return
+            
+            is_valid = verify_signature(self.root_hash, self.digital_signature)
             if is_valid:
                 messagebox.showinfo("Success", "Digital signature is valid!")
             else:

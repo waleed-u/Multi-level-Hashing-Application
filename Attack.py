@@ -35,7 +35,7 @@ def check_file_collisions():
 
 def check_random_string_collisions():
     """Check for collisions using random strings"""
-    max_attempts = 10000
+    max_attempts = 100000
     test_file = "Attack Files/file1.txt"  # Using first file as reference
     
     print("\n=== Checking for collisions with random strings ===")

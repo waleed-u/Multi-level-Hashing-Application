@@ -6,7 +6,7 @@ def previewEncoder()->None:
     parser = argparse.ArgumentParser(
         prog="Multi Level Encoder for Hashing",
         description="This program read a file and creates a Merkle Tree ready for Multi-Level Hashing",
-        epilog="Created by \033[1mMuhammad Sunaam :)\033[0m"
+        epilog="Created by \033[1mAbubakar Javed :)\033[0m"
     )
     parser.add_argument("-f","--file",action='store',help="stores path of the file you want to hash", type=str)
     parser.add_argument("-s","--string",action='store',help="sstring you want to hash", type=str)
